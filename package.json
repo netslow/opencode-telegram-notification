@@ -1,0 +1,20 @@
+{
+  "name": "opencode-telegram-notify",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OpenCode plugin + skill: Telegram notification after the current prompt/run finishes",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "telegram:diagnose": "tsx scripts/diagnose.ts",
+    "telegram:test-send": "tsx scripts/test-send.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.10"
+  }
+}
