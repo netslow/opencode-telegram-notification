@@ -1,4 +1,4 @@
-# telegram-notify — OpenCode V2 skill + plugin
+# telegram-notify — OpenCode V2 plugin
 
 An OpenCode plugin (**OpenCode V2** plugin format) that sends a **Telegram notification after every user prompt/run completes** (whether it succeeds or fails) — automatically, without any special instruction in the prompt.
 
@@ -72,7 +72,6 @@ Legacy V1 names (`chat.message`, `session.error`, `question.*`, `permission.v2.a
 | `telegram-notify/locales/en.js` / `ru.js` / `es.js` | localized Telegram message templates |
 | `telegram-notify/config.js` | loading env / `.env`, token redaction |
 | `telegram-notify/types.js` | local JSDoc types (V2-oriented, no dependency on `@opencode/*`) |
-| `.opencode/skills/telegram-notify/SKILL.md` | skill instructions for the OpenCode agent |
 
 State: each user prompt is placed into a queue for its session (`Map<sessionID, Pending>`). The `session.execution.succeeded` / `.failed` / `.interrupted` events (as well as the `session.idle` fallback) take the entry exactly once and send the notification — so each completed run produces exactly one message, and it does not “bleed over” into the next prompt.
 
@@ -83,7 +82,6 @@ The “waiting for response” notification follows a **separate path** (not thr
 1. Copy the repository contents into your project (or add the files to an existing one):
 
    - `.opencode/plugins/telegram-notify.js` + the `.opencode/plugins/telegram-notify/` folder
-   - `.opencode/skills/telegram-notify/SKILL.md`
 
 2. Install dependencies (only needed for development/testing — the plugin itself runs on Node.js built-in modules and requires no npm packages at runtime):
 
@@ -98,7 +96,6 @@ The “waiting for response” notification follows a **separate path** (not thr
 To receive notifications in any project, copy the plugin to the global configuration directory:
 
 - `~/.config/opencode/plugins/telegram-notify.js` + the `~/.config/opencode/plugins/telegram-notify/` folder
-- `~/.config/opencode/skills/telegram-notify/SKILL.md` (optional)
 - token/chat ID — in `~/.config/opencode/.env`
 
 (On Windows, the global directory is `%USERPROFILE%\.config\opencode`, for example `C:\Users\you\.config\opencode`.)
