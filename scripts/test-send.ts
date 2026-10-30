@@ -1,11 +1,11 @@
 /**
- * telegram:test-send — отправляет тестовое сообщение в Telegram тем же кодом,
- * что плагин (TelegramNotifier + formatNotification + прокси), проверяя
- * токен, chat_id, прокси и сеть end-to-end.
+ * telegram:test-send — sends a test message to Telegram using the same code
+ * as the plugin (TelegramNotifier + formatNotification + proxy), validating
+ * the token, chat_id, proxy, and network end-to-end.
  *
- * Коды выхода:
- *   0 — сообщение отправлено
- *   1 — конфигурация неполная или отправка не удалась
+ * Exit codes:
+ *   0 — message sent
+ *   1 — configuration is incomplete or sending failed
  */
 import {
   loadTelegramConfig,
@@ -19,14 +19,14 @@ const globalDirectory = resolveGlobalConfigDir()
 const config = loadTelegramConfig({ directory, globalDirectory })
 
 if (!config.enabled) {
-  console.error("X Plugin is DISABLED. Запустите `npm run telegram:diagnose`, чтобы понять почему.")
+  console.error("X Plugin is DISABLED. Run `npm run telegram:diagnose` to find out why.")
   process.exit(1)
 }
 
 const text = formatNotification(
   {
     sessionID: "test-send",
-    prompt: "Тестовое сообщение от telegram-notify",
+    prompt: "Test message from telegram-notify",
     status: "success",
     project: "telegram-notify",
     requestedAt: Date.now() - 3_000,
@@ -41,7 +41,7 @@ const notifier = new TelegramNotifier(config, {
 
 const result = await notifier.send(text)
 if (result.ok) {
-  console.log(`OK — тестовое сообщение отправлено в чат ${config.chatId}.`)
+  console.log(`OK — test message sent to chat ${config.chatId}.`)
   process.exit(0)
 }
 console.error(`X Send failed: ${result.reason ?? result.error ?? "unknown"}`)

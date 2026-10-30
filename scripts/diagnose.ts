@@ -1,11 +1,11 @@
 /**
- * telegram:diagnose — показывает, что видит плагин telegram-notify, и
- * проверяет доступность api.telegram.org (getMe) тем же кодом, что плагин
- * (встроенный transport из notifier.js + прокси из конфига). Сообщения в чат НЕ шлёт.
+ * telegram:diagnose — shows what the telegram-notify plugin sees and
+ * checks api.telegram.org availability (getMe) using the same code as the plugin
+ * (built-in transport from notifier.js + proxy from config). Does NOT send messages to the chat.
  *
- * Коды выхода:
- *   0 — конфигурация и связь с Telegram в порядке
- *   1 — конфигурация неполная или связь недоступна
+ * Exit codes:
+ *   0 — configuration and Telegram connectivity are OK
+ *   1 — configuration is incomplete or connectivity is unavailable
  */
 import { existsSync } from "node:fs"
 import {
@@ -19,7 +19,7 @@ const directory = process.cwd()
 const globalDirectory = resolveGlobalConfigDir()
 const config = loadTelegramConfig({ directory, globalDirectory })
 
-/** Скрыть credentials внутри URL прокси (http://user:pass@host). */
+/** Mask credentials inside a proxy URL (http://user:pass@host). */
 function maskProxy(value: string | undefined): string | undefined {
   if (!value) return value
   return value.replace(/^(https?:\/\/)([^/@:]+)(:[^/@]*)?(@)/, "$1$2***$4")
@@ -44,7 +44,7 @@ console.log(`https proxy:    ${maskProxy(config.proxy?.httpsProxy) ?? "(none)"}`
 console.log(`no proxy:       ${config.proxy?.noProxy ?? "(none)"}`)
 
 if (!config.enabled) {
-  console.error("\nX Plugin is DISABLED. Укажите TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID в одном из env-файлов выше.")
+  console.error("\nX Plugin is DISABLED. Set TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID in one of the env files above.")
   process.exit(1)
 }
 
@@ -58,7 +58,7 @@ try {
     | { ok?: boolean; result?: { username?: string } }
     | null
   if (response.ok && body?.ok) {
-    console.log(`OK — бот @${body.result?.username ?? "?"} доступен, токен валиден.`)
+    console.log(`OK — bot @${body.result?.username ?? "?"} is reachable, token is valid.`)
     process.exit(0)
   }
   const description =
@@ -70,7 +70,7 @@ try {
 } catch (error) {
   const raw = error instanceof Error ? error.message : String(error)
   console.error(`X Network error: ${raw.split(config.botToken ?? "").join("***")}`)
-  console.error("  Проверьте, что прокси запущен и через него доступен api.telegram.org.")
+  console.error("  Check that the proxy is running and api.telegram.org is reachable through it.")
   process.exit(1)
 } finally {
   clearTimeout(timer)
