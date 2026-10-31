@@ -46,21 +46,21 @@ Choose **one** installation type.
 
 #### Global install
 
-Notifications in every project. Copy the same files to the global OpenCode directory:
+Notifications in every project. Create the global plugin directory if needed, then copy these two items from this repository into it:
 
-- Linux/macOS: `~/.config/opencode/plugins/`
-- Windows: `%USERPROFILE%\.config\opencode\plugins\`
+- `.opencode/plugins/telegram-notify.js` → `~/.config/opencode/plugins/telegram-notify.js`
+- `.opencode/plugins/telegram-notify/` (the whole folder: `config.js`, `formatter.js`, `i18n.js`, `lifecycle.js`, `notifier.js`, `types.js`, and `locales/en.js`, `ru.js`, `es.js`) → `~/.config/opencode/plugins/telegram-notify/`
 
-Then make sure `~/.config/opencode/package.json` contains `"type": "module"` (on Windows: `%USERPROFILE%\.config\opencode\package.json`), creating it if needed.
+On Windows the destination is `%USERPROFILE%\.config\opencode\plugins\`.
+
+Then make sure `~/.config/opencode/package.json` contains `"type": "module"` (on Windows: `%USERPROFILE%\.config\opencode\package.json`) — see [About package.json](#about-packagejson) below.
 
 #### Project install
 
-Notifications only for one project. Copy from this repository into your project:
+Notifications only for one project. Create `<your-project>/.opencode/plugins/` if needed, then copy these two items from this repository into it:
 
-```text
-.opencode/plugins/telegram-notify.js
-.opencode/plugins/telegram-notify/     (the whole folder)
-```
+- `.opencode/plugins/telegram-notify.js` → `<your-project>/.opencode/plugins/telegram-notify.js`
+- `.opencode/plugins/telegram-notify/` (the whole folder: `config.js`, `formatter.js`, `i18n.js`, `lifecycle.js`, `notifier.js`, `types.js`, and `locales/en.js`, `ru.js`, `es.js`) → `<your-project>/.opencode/plugins/telegram-notify/`
 
 The result must look like this:
 
@@ -83,7 +83,16 @@ your-project/
                 └── es.js
 ```
 
-`your-project/.opencode/package.json` must contain `"type": "module"`. If the file does not exist, create it with exactly:
+`your-project/.opencode/package.json` must also contain `"type": "module"` — see [About package.json](#about-packagejson) below.
+
+#### About package.json
+
+Both installation options require a `package.json` with `"type": "module"` in the directory that contains the `plugins/` folder:
+
+- global install: `~/.config/opencode/package.json`
+- project install: `<your-project>/.opencode/package.json`
+
+This is a standard Node.js marker. Without it, Node may treat the plugin's `.js` files as CommonJS, which causes load errors or warnings. OpenCode does not create this file when you copy plugin files manually, so create it yourself if it is missing:
 
 ```json
 {
@@ -91,7 +100,7 @@ your-project/
 }
 ```
 
-Do not add npm dependencies: the plugin runs on Node.js built-in modules only.
+If you have installed npm plugins in that directory before (for example with `opencode plugin add`), the file may already exist — just verify the field. Do not add dependencies for this plugin: it runs on Node.js built-in modules only.
 
 > **Important for both options:** remove any old V1 copy of the plugin. V2 copies with the same `id` load only once, but a V1 copy without an `id` can load a second time and send duplicate notifications.
 
