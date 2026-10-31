@@ -44,7 +44,16 @@ The plugin is a set of plain JavaScript files with **no runtime dependencies**. 
 
 Choose **one** installation type.
 
-#### Project install (recommended)
+#### Global install
+
+Notifications in every project. Copy the same files to the global OpenCode directory:
+
+- Linux/macOS: `~/.config/opencode/plugins/`
+- Windows: `%USERPROFILE%\.config\opencode\plugins\`
+
+Then make sure `~/.config/opencode/package.json` contains `"type": "module"` (on Windows: `%USERPROFILE%\.config\opencode\package.json`), creating it if needed.
+
+#### Project install
 
 Notifications only for one project. Copy from this repository into your project:
 
@@ -84,16 +93,7 @@ your-project/
 
 Do not add npm dependencies: the plugin runs on Node.js built-in modules only.
 
-#### Global install
-
-Notifications in every project. Copy the same files to the global OpenCode directory:
-
-- Linux/macOS: `~/.config/opencode/plugins/`
-- Windows: `%USERPROFILE%\.config\opencode\plugins\`
-
-Then make sure `~/.config/opencode/package.json` contains `"type": "module"` (on Windows: `%USERPROFILE%\.config\opencode\package.json`), creating it if needed.
-
-> **Important:** remove any old V1 copy of the plugin. V2 copies with the same `id` load only once, but a V1 copy without an `id` can load a second time and send duplicate notifications.
+> **Important for both options:** remove any old V1 copy of the plugin. V2 copies with the same `id` load only once, but a V1 copy without an `id` can load a second time and send duplicate notifications.
 
 ### Step 3 — Add the bot credentials
 
