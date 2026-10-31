@@ -102,6 +102,8 @@ This is a standard Node.js marker. Without it, Node may treat the plugin's `.js`
 
 If you have installed npm plugins in that directory before (for example with `opencode plugin add`), the file may already exist — just verify the field. Do not add dependencies for this plugin: it runs on Node.js built-in modules only.
 
+> **Do not copy this repository's `package.json` or `package-lock.json`** into `.opencode/` or the global config directory. They describe the development environment (`vitest`, `tsx`, `typescript`) and are not part of the plugin. The plugin imports only Node.js built-in modules and its own relative files, so it needs no installed packages.
+
 > **Important for both options:** remove any old V1 copy of the plugin. V2 copies with the same `id` load only once, but a V1 copy without an `id` can load a second time and send duplicate notifications.
 
 ### Step 3 — Add the bot credentials
