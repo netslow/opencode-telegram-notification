@@ -20,6 +20,123 @@ Any completed run triggers a notification.
 - Localizes the notification templates (English, Russian and Spanish; defaults to English).
 - Telegram errors never break OpenCode.
 
+## Installation
+
+The plugin is a set of plain JavaScript files with **no runtime dependencies**. Install it once for a single project or globally for all projects.
+
+### Before you start
+
+- **OpenCode V2** — the plugin uses the V2 plugin API and does not work with V1.
+- **Node.js runtime** — provided by OpenCode; the plugin uses only Node.js built-in modules.
+- **A Telegram bot token and chat ID** — create them in step 1.
+
+### Step 1 — Create a Telegram bot
+
+1. In Telegram, open [@BotFather](https://t.me/BotFather) and send `/newbot`.
+2. Pick a name and a username. BotFather replies with a token like `123456:ABC-...` — copy it.
+3. Open your new bot and send it any message. A bot cannot start a chat with you, so this step is required before it can send notifications.
+4. Get the chat ID:
+   - **Private chat:** message [@userinfobot](https://t.me/userinfobot); it replies with your numeric `id`.
+   - **Group:** add the bot to the group, send a message in the group, open `https://api.telegram.org/bot<TOKEN>/getUpdates`, and copy `chat.id` (usually negative, e.g. `-1001234567890`).
+   - **Channel:** add the bot as an administrator, publish a post, then use the same `getUpdates` URL.
+
+### Step 2 — Copy the plugin
+
+Choose **one** installation type.
+
+#### Project install (recommended)
+
+Notifications only for one project. Copy from this repository into your project:
+
+```text
+.opencode/plugins/telegram-notify.js
+.opencode/plugins/telegram-notify/     (the whole folder)
+```
+
+The result must look like this:
+
+```text
+your-project/
+└── .opencode/
+    ├── package.json
+    └── plugins/
+        ├── telegram-notify.js
+        └── telegram-notify/
+            ├── config.js
+            ├── formatter.js
+            ├── i18n.js
+            ├── lifecycle.js
+            ├── notifier.js
+            ├── types.js
+            └── locales/
+                ├── en.js
+                ├── ru.js
+                └── es.js
+```
+
+`your-project/.opencode/package.json` must contain `"type": "module"`. If the file does not exist, create it with exactly:
+
+```json
+{
+  "type": "module"
+}
+```
+
+Do not add npm dependencies: the plugin runs on Node.js built-in modules only.
+
+#### Global install
+
+Notifications in every project. Copy the same files to the global OpenCode directory:
+
+- Linux/macOS: `~/.config/opencode/plugins/`
+- Windows: `%USERPROFILE%\.config\opencode\plugins\`
+
+Then make sure `~/.config/opencode/package.json` contains `"type": "module"` (on Windows: `%USERPROFILE%\.config\opencode\package.json`), creating it if needed.
+
+> **Important:** remove any old V1 copy of the plugin. V2 copies with the same `id` load only once, but a V1 copy without an `id` can load a second time and send duplicate notifications.
+
+### Step 3 — Add the bot credentials
+
+Create a `.env` file in the same scope as the plugin:
+
+- **Project install:** `<your-project>/.env`
+- **Global install:** `~/.config/opencode/.env` (Windows: `%USERPROFILE%\.config\opencode\.env`)
+
+Add the two required variables:
+
+```text
+TELEGRAM_BOT_TOKEN=123456:ABC-...
+TELEGRAM_CHAT_ID=42
+```
+
+That is enough to start. Optional variables (timeout, retries, language, proxy) are described in [Environment variables](#environment-variables).
+
+Keep these rules in mind:
+
+- Already-set environment variables win over `.env`; the project `.env` wins over the global one.
+- The token is never written to logs.
+- The plugin is enabled automatically when the token and chat ID are present; set `TELEGRAM_ENABLED=false` to mute it.
+
+### Step 4 — Restart OpenCode
+
+Plugins and `.env` files are read at startup, so fully quit and reopen OpenCode. `TELEGRAM_LANGUAGE` is the only setting that is re-read for every notification and does not need a restart.
+
+### Step 5 — Verify the installation
+
+From the root of this repository, with the same credentials available in its `.env` or the global `.env` (install dev dependencies once with `npm install`):
+
+```sh
+npm run telegram:diagnose   # prints the config and checks api.telegram.org; sends nothing
+npm run telegram:test-send  # sends a real test message
+```
+
+Exit code `0` means success. Then run any prompt in OpenCode and wait for the run to finish — a Telegram message should arrive. For the remaining checks, including the “waiting for an answer” and permission notifications, see [Verification](#verification).
+
+### Updating and uninstalling
+
+- **Update:** replace `telegram-notify.js` and the `telegram-notify/` folder with the new versions, then restart OpenCode. Your `.env` stays as is.
+- **Uninstall:** delete `telegram-notify.js` and the `telegram-notify/` folder from the plugin directory, restart OpenCode, and optionally remove the `TELEGRAM_*` variables from `.env`.
+
 ## Architecture
 
 ```text
@@ -77,41 +194,6 @@ State: each user prompt is placed into a queue for its session (`Map<sessionID, 
 
 The “waiting for response” notification follows a **separate path** (not through the completion queue): the `form.created` / `permission.asked` event is sent immediately and does not interfere with the final run-completion notification. To avoid spamming, deduplication by request ID and a **30-second cooldown** per session apply (at most one such notification per 30 seconds).
 
-## Installation
-
-1. Copy the repository contents into your project (or add the files to an existing one):
-
-   - `.opencode/plugins/telegram-notify.js` + the `.opencode/plugins/telegram-notify/` folder
-
-2. Install dependencies (only needed for development/testing — the plugin itself runs on Node.js built-in modules and requires no npm packages at runtime):
-
-   ```sh
-   npm install
-   ```
-
-3. Restart OpenCode (plugins and env are read at startup).
-
-### Global installation (for all projects)
-
-To receive notifications in any project, copy the plugin to the global configuration directory:
-
-- `~/.config/opencode/plugins/telegram-notify.js` + the `~/.config/opencode/plugins/telegram-notify/` folder
-- token/chat ID — in `~/.config/opencode/.env`
-
-(On Windows, the global directory is `%USERPROFILE%\.config\opencode`, for example `C:\Users\you\.config\opencode`.)
-
-The plugin has no runtime dependencies, so it works there too. Make sure `~/.config/opencode/package.json` contains `"type": "module"` (otherwise Node loads the plugin using ESM heuristics with a warning). The `@opencode-ai/plugin` dependency is not needed — and for V2 it is better not to keep it.
-
-Do not install an old V1 copy of the plugin alongside it: V2 copies with the same `id` are loaded only once, but a V1 copy without an `id` may be loaded a second time and produce duplicate notifications.
-
-4. Verify that the plugin is active (see the “Verification” section).
-
-## Setting up a Telegram bot
-
-1. In Telegram, message [@BotFather](https://t.me/BotFather) → `/newbot` → get a token in the form `123456:ABC-...`.
-2. Send any message to your bot (so it can message you first).
-3. Find your `chat ID`: message [@userinfobot](https://t.me/userinfobot) — it will send you your `id`.
-
 ## Environment variables
 
 Copy `.env.example` to `.env` (next to your project) or add the variables to your environment. **The global file `~/.config/opencode/.env` is also supported** (on Windows: `%USERPROFILE%\.config\opencode\.env`) — the plugin reads it automatically:
@@ -141,6 +223,8 @@ Value precedence: environment variables → `<project>/.env` → `~/.config/open
 The token is never logged: before writing to the log, it is replaced with `***`.
 
 ## Verification
+
+Run these commands from the root of this repository (after `npm install`), with the credentials available in its `.env` or the global `.env`:
 
 ```sh
 npm run telegram:diagnose   # what the plugin sees + Telegram connectivity (getMe); does not send messages
