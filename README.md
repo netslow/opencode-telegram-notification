@@ -87,12 +87,14 @@ your-project/
 
 #### About package.json
 
-Both installation options require a `package.json` with `"type": "module"` in the directory that contains the `plugins/` folder:
+Both installation options **require** a `package.json` with `"type": "module"` in the directory that contains the `plugins/` folder:
 
 - global install: `~/.config/opencode/package.json`
 - project install: `<your-project>/.opencode/package.json`
 
-This is a standard Node.js marker. Without it, Node may treat the plugin's `.js` files as CommonJS, which causes load errors or warnings. OpenCode does not create this file when you copy plugin files manually, so create it yourself if it is missing:
+The plugin uses ES module syntax (`import`/`export`). Without `"type": "module"`, Node treats `.js` files as CommonJS: older Node versions fail with `Cannot use import statement outside a module`, while newer versions may still load the plugin through syntax detection but print a `MODULE_TYPELESS_PACKAGE_JSON` warning. Do not rely on that fallback — the plugin may fail to load.
+
+OpenCode does not create this file when you copy plugin files manually. **If the file is missing, create it** with exactly this content:
 
 ```json
 {
@@ -100,7 +102,14 @@ This is a standard Node.js marker. Without it, Node may treat the plugin's `.js`
 }
 ```
 
-If you have installed npm plugins in that directory before (for example with `opencode plugin add`), the file may already exist — just verify the field. Do not add dependencies for this plugin: it runs on Node.js built-in modules only.
+**If the file already exists, check it:**
+
+1. It is valid JSON: double quotes, no comments, no trailing commas.
+2. It contains `"type": "module"` at the top level — not inside another object.
+3. If it contains `"type": "commonjs"` or has no `"type"` field, change or add it to `"module"`.
+4. Keep all other fields and dependencies. Merge the change instead of replacing the file, because other plugins in the same directory may rely on them.
+
+If you have installed npm plugins in that directory before (for example with `opencode plugin add`), the file probably already exists — just verify the points above. Do not add dependencies for this plugin: it runs on Node.js built-in modules only.
 
 > **Do not copy this repository's `package.json` or `package-lock.json`** into `.opencode/` or the global config directory. They describe the development environment (`vitest`, `tsx`, `typescript`) and are not part of the plugin. The plugin imports only Node.js built-in modules and its own relative files, so it needs no installed packages.
 
